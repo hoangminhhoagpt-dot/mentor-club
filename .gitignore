@@ -1,0 +1,5 @@
+config.local.json
+output/
+node_modules/
+.env
+*.log
