@@ -194,9 +194,18 @@ async function uploadToYouTube(accessToken, filePath, fileSize, snippet, status)
 
 // ---------- MAIN ----------
 async function main() {
-  const need = DRY ? ["tablePost"] : ["tablePost", "oauthClientId", "oauthClientSecret", "oauthRefreshToken"];
+  // Bảng: KHÔNG bắt người triển khai đi copy table_id. Bỏ trống thì tự tìm theo TÊN ("16.3").
+  // Vẫn cho ghi đè bằng TABLE_POST nếu ai đó cố tình đặt tên bảng khác.
+  const { resolveTable } = await import(new URL("../../../../scripts/lib/resolve-table.mjs", import.meta.url));
+  CFG.tablePost = await resolveTable({
+    domain: CFG.larkDomain, appId: CFG.larkAppId, appSecret: CFG.larkAppSecret,
+    base: CFG.appToken, hint: CFG.tablePost || "16.3", label: "bảng đăng video",
+  });
+  console.log(`Bảng đăng video: ${CFG.tablePost}`);
+
+  const need = DRY ? [] : ["oauthClientId", "oauthClientSecret", "oauthRefreshToken"];
   for (const k of need) {
-    if (!CFG[k]) throw new Error(`Thiếu "${k}" trong config.local.json. (Chạy setup-table.mjs / get-oauth-token.mjs trước.)`);
+    if (!CFG[k]) throw new Error(`Thiếu "${k}" — đặt ở GitHub Secrets (YT_OAUTH_CLIENT_SECRET / YT_OAUTH_REFRESH_TOKEN) hoặc chạy get-oauth-token.mjs.`);
   }
   const rows = await listPending();
   let pending;

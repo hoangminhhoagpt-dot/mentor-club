@@ -12,3 +12,6 @@ __pycache__/
 *.log
 .DS_Store
 Thumbs.db
+
+khach.config.json
+node_modules/

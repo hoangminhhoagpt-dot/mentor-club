@@ -1,36 +1,59 @@
-# Module YouTube ↔ Lark Base
+# Module YouTube ⇄ Lark Base
 
-Bộ 2 skill Node (zero-dependency) chạy được cả **máy local** lẫn **GitHub Actions** (gọi qua HTTP từ Lark Base):
+Bộ tự động hoá nối **YouTube** với **Lark Base**, chạy trên **GitHub Actions** — không cần server, không cần bật máy tính.
 
-| Skill | Việc |
-|---|---|
-| [`hmh-AIOS-sync-youtube-lark`](.claude/skills/hmh-AIOS-sync-youtube-lark) | Kéo dữ liệu kênh + video YouTube → Lark Base (2 bảng), có pre-flight + card báo cáo |
-| [`hmh-AIOS-dang-video-youtube`](.claude/skills/hmh-AIOS-dang-video-youtube) | Đăng video từ bảng Lark → YouTube (OAuth, resumable) |
+Mỗi việc là một **action gọi bằng HTTP**, nên Lark Base bấm nút là chạy.
 
-## 📚 Hướng dẫn (đọc theo thứ tự)
-
-| Bước | Tài liệu | Dùng khi |
+| Action | Việc | Bảng |
 |---|---|---|
-| ⭐ 1 | [Checklist cài đặt (điền & chạy)](huong-dan/CHECKLIST-CAI-DAT-YOUTUBE.md) | Cài cho máy mới — copy lệnh dán là xong |
-| 2 | [Hướng dẫn cài chi tiết](huong-dan/README-CAI-DAT.md) | Giải thích rõ local vs cloud |
-| 3 | [Setup GitHub Actions](huong-dan/SETUP-GITHUB.md) | Điền Secrets/Variables để chạy cloud |
-| 4 | [Mẫu gọi HTTP từ Lark](huong-dan/HTTP-Lark-templates.md) | Nối vào automation Lark Base |
-| 5 | [Quy trình đăng video từ Lark](huong-dan/QUY-TRINH-dang-youtube-tu-lark.md) | Cách vận hành bảng đăng video |
-| 🍴 | [Hướng dẫn khi FORK repo](huong-dan/HUONG-DAN-FORK.md) | Người khác fork về dùng cho kênh/base riêng |
+| `init-tables` | Tạo sẵn 3 bảng mẫu vào Base của bạn | tất cả |
+| `sync-youtube` | Lấy dữ liệu kênh + video (view, like, comment, thumbnail) | 16.1 · 16.2 |
+| `dang-video-youtube` | Đăng video từ Lark lên YouTube (OAuth, resumable) | 16.3 |
 
-## 🍴 Muốn dùng cho kênh/khách của bạn?
-Bấm **Fork** ở góc trên repo này rồi làm theo [HUONG-DAN-FORK.md](huong-dan/HUONG-DAN-FORK.md) — điền token của riêng bạn (fork không sao chép Secrets của chủ gốc).
+---
 
-## Chạy nhanh (đã cài xong)
-```powershell
-# Kéo dữ liệu kênh
-node ".claude\skills\hmh-AIOS-sync-youtube-lark\scripts\sync-youtube-lark.mjs" --only channel
-# Đăng video (thử)
-node ".claude\skills\hmh-AIOS-dang-video-youtube\scripts\post-video-youtube.mjs" --dry-run
+## Khởi tạo nhanh nhất — 1 lệnh
+
+Điền các giá trị vào đầu file rồi chạy. Script làm hết: tạo 3 bảng → lấy kênh + video → kiểm tra bảng đăng.
+
+```bash
+git clone https://github.com/hoangminhhoagpt-dot/mentor-club-youtube
+cd mentor-club-youtube
 ```
 
-## Gọi qua HTTP (cloud)
-`POST https://api.github.com/repos/hoangminhhoagpt-dot/mentor-club-youtube/dispatches`
-→ event `sync-youtube` hoặc `dang-video-youtube`. Chi tiết ở [HTTP-Lark-templates.md](huong-dan/HTTP-Lark-templates.md).
+```powershell
+# Windows — mở khoi-tao.ps1, điền giá trị, rồi:
+.\khoi-tao.ps1
+```
 
-> 🔒 Không bao giờ commit `config.local.json` (đã chặn trong `.gitignore`).
+```bash
+# macOS / Linux — mở khoi-tao.sh, điền giá trị, rồi:
+bash khoi-tao.sh
+```
+
+Bắt buộc: `LARK_APP_ID`, `LARK_APP_SECRET`, `LARK_BASE_ID`, `YOUTUBE_API_KEY`, `YT_CHANNEL`.
+Ba biến `YT_OAUTH_*` **chỉ cần nếu muốn ĐĂNG video** — bỏ trống vẫn lấy dữ liệu được.
+
+Chạy lại bao nhiêu lần cũng được — **không tạo bảng trùng, không tạo dòng trùng**.
+
+---
+
+## Bắt đầu
+
+| Bạn muốn | Đọc file |
+|---|---|
+| Triển khai cho mình / cho khách (dưới 20 phút) | **[TRIEN-KHAI.md](TRIEN-KHAI.md)** |
+| Xem chi tiết từng action + tham số | [ACTIONS.md](ACTIONS.md) |
+| Cấu hình nút bấm & tự động hoá trong Lark Base | [LARK-AUTOMATION.md](LARK-AUTOMATION.md) |
+| Làm hàng loạt cho nhiều học viên (1 lệnh/người) | [trien-khai/README.md](trien-khai/README.md) |
+
+Tài liệu cũ chi tiết hơn nằm ở [huong-dan/](huong-dan/).
+
+## Nguyên tắc thiết kế
+
+- **Không copy table_id.** Engine tự tìm bảng theo tên (`16.1`, `16.2`, `16.3`). Bạn chỉ cần khai `LARK_BASE_ID`.
+- **Chạy lại bao nhiêu lần cũng được.** Kênh khớp theo link, video khớp theo `video id` → chạy lại là cập nhật số liệu, không tạo bản trùng.
+- **`init-tables` là vá, không phá.** Bảng đã có thì chỉ thêm cột còn thiếu; cột đã có thì giữ nguyên, không đổi kiểu.
+- **Bí mật nằm trong GitHub Secrets**, không nằm trong code. Token hết hạn chỉ cần đổi Secret.
+
+> 🔒 Không bao giờ commit `config.local.json` / `khach.config.json` (đã chặn trong `.gitignore`).

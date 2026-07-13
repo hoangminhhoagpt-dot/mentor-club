@@ -1,0 +1,39 @@
+name: init-tables
+
+# Tạo sẵn 3 bảng mẫu 16.1 / 16.2 / 16.3 vào Lark Base được chỉ định.
+# Gọi qua HTTP:  POST https://api.github.com/repos/<OWNER>/<REPO>/dispatches
+#   body: {"event_type":"init-tables","client_payload":{}}
+# Hoặc bấm tay: tab Actions → init-tables → Run workflow.
+
+on:
+  repository_dispatch:
+    types: [init-tables]
+  workflow_dispatch:
+    inputs:
+      mode:
+        description: 'Để trống = tạo thật | --dry-run = chỉ xem sẽ tạo gì'
+        required: false
+        default: ''
+
+concurrency:
+  group: init-tables
+  cancel-in-progress: false
+
+jobs:
+  run:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+      - name: Tạo 3 bảng mẫu vào Lark Base
+        env:
+          # Bí mật — Settings → Secrets and variables → Actions → Secrets
+          LARK_APP_SECRET: ${{ secrets.LARK_APP_SECRET }}
+          # Cấu hình — Settings → Secrets and variables → Actions → Variables
+          LARK_APP_ID:  ${{ vars.LARK_APP_ID }}
+          LARK_DOMAIN:  ${{ github.event.client_payload.domain || vars.LARK_DOMAIN }}
+          LARK_BASE_ID: ${{ github.event.client_payload.base_id || vars.LARK_BASE_ID }}
+        run: node scripts/init-tables.mjs ${{ github.event.client_payload.mode || github.event.inputs.mode }}

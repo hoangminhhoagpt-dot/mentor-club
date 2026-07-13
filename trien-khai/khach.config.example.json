@@ -1,0 +1,21 @@
+{
+  "_huong_dan": "Copy file này thành khach.config.json rồi điền. Bỏ trống phần OAUTH nếu khách chỉ cần LẤY dữ liệu, chưa cần đăng video.",
+
+  "GITHUB_PAT":  "ghp_xxx  (PAT classic, scope repo — của TÀI KHOẢN KHÁCH)",
+  "REPO_NAME":   "mentor-club-youtube",
+
+  "LARK_APP_ID":     "cli_xxx",
+  "LARK_APP_SECRET": "xxx",
+  "LARK_BASE_ID":    "xxx  (chuỗi sau /base/ trên thanh địa chỉ)",
+
+  "YOUTUBE_API_KEY": "AIzaSyxxx",
+  "YT_CHANNEL":      "@tenkenhcuakhach  (copy y nguyên từ thanh địa chỉ của kênh)",
+
+  "YT_OAUTH_CLIENT_ID":     "",
+  "YT_OAUTH_CLIENT_SECRET": "",
+  "YT_OAUTH_REFRESH_TOKEN": "",
+
+  "LARK_DOMAIN":         "",
+  "YT_PRIVACY":          "",
+  "LARK_NOTIFY_WEBHOOK": ""
+}

@@ -47,8 +47,23 @@ CFG.tableChannel  = E.TABLE_CHANNEL   || CFG.tableChannel;
 CFG.tableVideo    = E.TABLE_VIDEO     || CFG.tableVideo;
 CFG.channel       = E.YT_CHANNEL      || CFG.channel;
 CFG.larkNotifyWebhook = E.LARK_NOTIFY_WEBHOOK || CFG.larkNotifyWebhook; // TUỲ CHỌN: webhook bot Lark để gửi card báo cáo cuối job
-for (const k of ["youtubeApiKey", "larkAppId", "larkAppSecret", "appToken", "tableChannel", "tableVideo", "channel"]) {
+for (const k of ["youtubeApiKey", "larkAppId", "larkAppSecret", "appToken", "channel"]) {
   if (!CFG[k]) { console.error(`Thiếu cấu hình "${k}" (điền config.local.json hoặc set biến môi trường tương ứng).`); process.exit(1); }
+}
+
+// Bảng: KHÔNG bắt người triển khai đi copy table_id. Bỏ trống thì tự tìm theo TÊN ("16.1"/"16.2").
+// Vẫn cho ghi đè bằng TABLE_CHANNEL / TABLE_VIDEO nếu ai đó cố tình đặt tên bảng khác.
+{
+  const { resolveTable } = await import(new URL("../../../../scripts/lib/resolve-table.mjs", import.meta.url));
+  const common = { domain: CFG.larkDomain, appId: CFG.larkAppId, appSecret: CFG.larkAppSecret, base: CFG.appToken };
+  try {
+    CFG.tableChannel = await resolveTable({ ...common, hint: CFG.tableChannel || "16.1", label: "bảng kênh" });
+    CFG.tableVideo = await resolveTable({ ...common, hint: CFG.tableVideo || "16.2", label: "bảng video" });
+    console.log(`Bảng: kênh=${CFG.tableChannel}  video=${CFG.tableVideo}`);
+  } catch (e) {
+    console.error("\n✖ " + (e.message || e) + "\n");
+    process.exit(1);
+  }
 }
 
 // ---------- utils ----------
